@@ -476,8 +476,10 @@ export function createRewriteUI({ getSettings, getView, getReader, getRouting, o
             model.disabled = busy || !route.supported;
             const directFields = root.querySelector('[data-direct-fields]');
             directFields.hidden = settings.profileId !== DIRECT_ID;
-            if (document.activeElement !== directUrlInput) directUrlInput.value = settings.directUrl ?? '';
-            if (document.activeElement !== directKeyInput) directKeyInput.value = settings.directKey ?? '';
+            const directUrlSync = root.querySelector('[data-direct-url]');
+            const directKeySync = root.querySelector('[data-direct-key]');
+            if (directUrlSync && document.activeElement !== directUrlSync) directUrlSync.value = settings.directUrl ?? '';
+            if (directKeySync && document.activeElement !== directKeySync) directKeySync.value = settings.directKey ?? '';
             const rewritePicker = root.querySelector('[data-model-picker]');
             const rewriteLoading = requests.has(`${seq}:rewrite`);
             const rewriteModelItems = route.models.length || route.canFetch
