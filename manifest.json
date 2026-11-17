@@ -1,7 +1,7 @@
 {
     "display_name": "正文重写 · 独立版",
     "author": "wujimol",
-    "version": "3.5.1",
+    "version": "3.5.2",
     "description": "手动或自动重写正文，同楼保留各版；修改意见支持条目仓库、预设与角色绑定及顺序组合。无需修改酒馆本体。",
     "homePage": "https://github.com/wujimol/SillyTavern-Auto-Rewrite",
     "loading_order": 220,

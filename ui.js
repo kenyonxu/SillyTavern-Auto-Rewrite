@@ -309,6 +309,7 @@ export function createRewriteUI({ getSettings, getView, getReader, getRouting, o
                     <div class="auto-rewrite-route-fields" data-direct-fields hidden>
                         <div class="auto-rewrite-label"><span>端点 URL</span><input type="text" autocomplete="off" spellcheck="false" placeholder="http://192.168.1.10:8011/v1" data-direct-url></div>
                         <div class="auto-rewrite-label"><span>API Key（可选）</span><input type="password" autocomplete="off" spellcheck="false" placeholder="本地服务可留空" data-direct-key></div>
+                        <div class="auto-rewrite-label"><span>改文温度（可选）</span><input type="text" autocomplete="off" spellcheck="false" placeholder="留空用服务端默认，如 0.3" data-direct-temp></div>
                     </div>
                     <p class="auto-rewrite-model-hint" data-model-hint></p>
                 </div>
@@ -376,9 +377,12 @@ export function createRewriteUI({ getSettings, getView, getReader, getRouting, o
 
         const directUrlInput = root.querySelector('[data-direct-url]');
         const directKeyInput = root.querySelector('[data-direct-key]');
-        const commitDirect = () => onDirectConfig(directUrlInput.value.trim(), directKeyInput.value.trim());
+        const directTempInput = root.querySelector('[data-direct-temp]');
+        const commitDirect = () => onDirectConfig(directUrlInput.value.trim(),
+            directKeyInput.value.trim(), directTempInput.value.trim());
         directUrlInput.addEventListener('change', commitDirect);
         directKeyInput.addEventListener('change', commitDirect);
+        directTempInput.addEventListener('change', commitDirect);
 
         const rewriteModelInput = root.querySelector('[data-model]');
         const rewritePickerBtn = root.querySelector('[data-model-picker]');
@@ -478,8 +482,10 @@ export function createRewriteUI({ getSettings, getView, getReader, getRouting, o
             directFields.hidden = settings.profileId !== DIRECT_ID;
             const directUrlSync = root.querySelector('[data-direct-url]');
             const directKeySync = root.querySelector('[data-direct-key]');
+            const directTempSync = root.querySelector('[data-direct-temp]');
             if (directUrlSync && document.activeElement !== directUrlSync) directUrlSync.value = settings.directUrl ?? '';
             if (directKeySync && document.activeElement !== directKeySync) directKeySync.value = settings.directKey ?? '';
+            if (directTempSync && document.activeElement !== directTempSync) directTempSync.value = settings.directTemperature ?? '';
             const rewritePicker = root.querySelector('[data-model-picker]');
             const rewriteLoading = requests.has(`${seq}:rewrite`);
             const rewriteModelItems = route.models.length || route.canFetch

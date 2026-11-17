@@ -57,6 +57,7 @@ function settings() {
     if (typeof all[KEY].model !== 'string') all[KEY].model = '';
     if (typeof all[KEY].directUrl !== 'string') all[KEY].directUrl = '';
     if (typeof all[KEY].directKey !== 'string') all[KEY].directKey = '';
+    if (typeof all[KEY].directTemperature !== 'string') all[KEY].directTemperature = '';
     if (ensureFeedbackLibrary(all[KEY])) getContext().saveSettingsDebounced();
     return all[KEY];
 }
@@ -348,7 +349,11 @@ export function enable() {
         getRouting: () => routing.describe(settings()),
         onRoute: value => { Object.assign(settings(), value); getContext().saveSettingsDebounced(); },
         onRefreshModels: signal => routing.refreshModels({ ...settings() }, signal),
-        onDirectConfig: (url, key) => { const s = settings(); s.directUrl = url; s.directKey = key; getContext().saveSettingsDebounced(); },
+        onDirectConfig: (url, key, temp) => {
+            const s = settings();
+            s.directUrl = url; s.directKey = key; s.directTemperature = temp;
+            getContext().saveSettingsDebounced();
+        },
         onMainProfile: id => { routing.setMainProfile(id); ui?.sync(); ui?.refresh(); },
         onMainModel: model => { routing.setMainModel(model); ui?.sync(); ui?.refresh(); },
         onRefreshMainModels: signal => routing.refreshModels({ profileId: '', model: '' }, signal),

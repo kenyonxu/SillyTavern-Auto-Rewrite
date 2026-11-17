@@ -54,7 +54,11 @@ export function createModelRouting() {
             settings.custom_url = url;
             // Key 通过自定义请求头注入，不进酒馆的密钥库；留空则不带鉴权（本地服务常见）
             settings.custom_include_headers = key ? `Authorization: Bearer ${key}` : '';
-            settings.custom_include_body = '';
+            // 温度经专用字段 rewrite_temperature 传给薯饼路由（标准 temperature 是
+            // 聊天面板的值，会被服务端忽略）；无效输入直接不注入。
+            const temp = Number(String(selection.directTemperature ?? '').trim());
+            settings.custom_include_body = (Number.isFinite(temp) && temp >= 0 && temp <= 2)
+                ? JSON.stringify({ rewrite_temperature: temp }) : '';
             settings.custom_exclude_body = '';
             const model = selection.model?.trim();
             if (model) settings.custom_model = model;
