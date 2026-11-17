@@ -55,6 +55,8 @@ function settings() {
     if (typeof all[KEY].feedback !== 'string' || PREVIOUS_DEFAULT_FEEDBACKS.includes(all[KEY].feedback)) all[KEY].feedback = DEFAULT_FEEDBACK;
     if (typeof all[KEY].profileId !== 'string') all[KEY].profileId = '';
     if (typeof all[KEY].model !== 'string') all[KEY].model = '';
+    if (typeof all[KEY].directUrl !== 'string') all[KEY].directUrl = '';
+    if (typeof all[KEY].directKey !== 'string') all[KEY].directKey = '';
     if (ensureFeedbackLibrary(all[KEY])) getContext().saveSettingsDebounced();
     return all[KEY];
 }
@@ -346,6 +348,7 @@ export function enable() {
         getRouting: () => routing.describe(settings()),
         onRoute: value => { Object.assign(settings(), value); getContext().saveSettingsDebounced(); },
         onRefreshModels: signal => routing.refreshModels({ ...settings() }, signal),
+        onDirectConfig: (url, key) => { const s = settings(); s.directUrl = url; s.directKey = key; getContext().saveSettingsDebounced(); },
         onMainProfile: id => { routing.setMainProfile(id); ui?.sync(); ui?.refresh(); },
         onMainModel: model => { routing.setMainModel(model); ui?.sync(); ui?.refresh(); },
         onRefreshMainModels: signal => routing.refreshModels({ profileId: '', model: '' }, signal),

@@ -10,6 +10,7 @@ const CONNECTION_FIELDS = new Set([
         && !['group_models', 'sort_models', 'custom_prompt_post_processing'].includes(key)).map(([, value]) => value[1]),
     'reverse_proxy', 'proxy_password', 'vertexai_auth_mode', 'vertexai_region',
     'vertexai_express_project_id', 'azure_base_url', 'azure_deployment_name', 'azure_api_version',
+    'custom_url', 'custom_model', 'custom_include_headers', 'custom_include_body', 'custom_exclude_body',
 ]);
 const CATALOG_SOURCES = new Set(['openai', 'openrouter', 'custom', 'mistralai', 'cohere', 'groq',
     'chutes', 'electronhub', 'nanogpt', 'deepseek', 'aimlapi', 'xai', 'moonshot', 'fireworks',
@@ -32,6 +33,10 @@ function catalogKey(target) {
         s.zai_endpoint, s.pollinations_endpoint]);
 }
 
+// 「直连」模式的哨兵 profileId：不引用连接管理器的任何配置，端点/Key/模型
+// 全部来自本插件设置（settings().directUrl / directKey），重写时按 custom 源合成。
+export const DIRECT_ID = '__direct__';
+
 export function createModelRouting() {
     let active;
     const catalogs = new Map();
@@ -41,6 +46,21 @@ export function createModelRouting() {
     function targetFor(selection) {
         const base = baseline();
         const settings = structuredClone(base);
+        if (selection.profileId === DIRECT_ID) {
+            const url = String(selection.directUrl ?? '').trim();
+            if (!url) throw new Error('直连模式未填写端点 URL，请在重写设置里补上');
+            const key = String(selection.directKey ?? '').trim();
+            settings.chat_completion_source = 'custom';
+            settings.custom_url = url;
+            // Key 通过自定义请求头注入，不进酒馆的密钥库；留空则不带鉴权（本地服务常见）
+            settings.custom_include_headers = key ? `Authorization: Bearer ${key}` : '';
+            settings.custom_include_body = '';
+            settings.custom_exclude_body = '';
+            const model = selection.model?.trim();
+            if (model) settings.custom_model = model;
+            return { settings, secretId: undefined, model: getChatCompletionModel(settings) || '',
+                profile: null, source: 'custom', label: '直连（独立配置）' };
+        }
         const profile = selection.profileId ? profiles().find(p => p.id === selection.profileId) : null;
         if (selection.profileId && !profile) throw new Error('所选 API 配置已删除，请重新选择');
         let secretId;

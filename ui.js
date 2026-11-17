@@ -1,5 +1,6 @@
 import { createVersionReader } from './version-reader.js';
 import { createFeedbackLibraryUI } from './feedback-library-ui.js';
+import { DIRECT_ID } from './model-routing.js';
 
 function duration(ms) {
     const seconds = Math.max(0, Math.floor(ms / 1000));
@@ -238,7 +239,7 @@ function setDropdownButton(btn, items, value) {
     btn.dataset.value = value;
 }
 
-export function createRewriteUI({ getSettings, getView, getReader, getRouting, onRoute, onRefreshModels, onMainProfile, onMainModel, onRefreshMainModels, onAuto, onLibraryChange, onRewrite, onJump, onMutation }) {
+export function createRewriteUI({ getSettings, getView, getReader, getRouting, onRoute, onDirectConfig, onRefreshModels, onMainProfile, onMainModel, onRefreshMainModels, onAuto, onLibraryChange, onRewrite, onJump, onMutation }) {
     let settingsLauncher, settingsEntry, bar, footer, nativePager, pagerSlot, dialog, observer, frame, poll, clock, shown;
     let dock, dockViewport, dockObserver, dockPadding;
     let disposed = false;
@@ -305,6 +306,10 @@ export function createRewriteUI({ getSettings, getView, getReader, getRouting, o
                         <div class="auto-rewrite-label"><span>API 配置</span><button type="button" class="auto-rewrite-select-btn" data-profile aria-haspopup="listbox" aria-expanded="false" aria-label="重写使用的 API 配置"><span class="auto-rewrite-select-text" data-btn-label></span><span class="auto-rewrite-select-tag" data-btn-tag hidden></span><i class="fa-solid fa-chevron-down auto-rewrite-caret" aria-hidden="true"></i></button></div>
                         <div class="auto-rewrite-label"><span>模型型号</span><div class="auto-rewrite-combo"><input type="text" autocomplete="off" spellcheck="false" data-model aria-label="重写模型型号"><button type="button" class="auto-rewrite-combo-btn auto-rewrite-picker-btn" data-model-picker aria-haspopup="listbox" aria-expanded="false" title="从列表选择重写模型" aria-label="展开重写模型列表"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><button type="button" class="auto-rewrite-combo-btn" data-refresh-models title="读取重写 API 的模型列表" aria-label="刷新重写模型列表"><i class="fa-solid fa-rotate" aria-hidden="true"></i></button></div></div>
                     </div>
+                    <div class="auto-rewrite-route-fields" data-direct-fields hidden>
+                        <div class="auto-rewrite-label"><span>端点 URL</span><input type="text" autocomplete="off" spellcheck="false" placeholder="http://192.168.1.10:8011/v1" data-direct-url></div>
+                        <div class="auto-rewrite-label"><span>API Key（可选）</span><input type="password" autocomplete="off" spellcheck="false" placeholder="本地服务可留空" data-direct-key></div>
+                    </div>
                     <p class="auto-rewrite-model-hint" data-model-hint></p>
                 </div>
                 <div class="auto-rewrite-model-summary"><i class="fa-solid fa-arrow-turn-up" aria-hidden="true"></i><span data-route-summary></span></div>
@@ -368,6 +373,12 @@ export function createRewriteUI({ getSettings, getView, getReader, getRouting, o
             delete root.dataset.modelsMessage;
             onRoute({ profileId: id, model: '' }); sync(); refresh();
         }));
+
+        const directUrlInput = root.querySelector('[data-direct-url]');
+        const directKeyInput = root.querySelector('[data-direct-key]');
+        const commitDirect = () => onDirectConfig(directUrlInput.value.trim(), directKeyInput.value.trim());
+        directUrlInput.addEventListener('change', commitDirect);
+        directKeyInput.addEventListener('change', commitDirect);
 
         const rewriteModelInput = root.querySelector('[data-model]');
         const rewritePickerBtn = root.querySelector('[data-model-picker]');
@@ -450,6 +461,7 @@ export function createRewriteUI({ getSettings, getView, getReader, getRouting, o
             const profileBtn = root.querySelector('[data-profile]');
             const rewriteEntries = [
                 { value: '', label: '沿用当前 API', tag: '' },
+                { value: DIRECT_ID, label: '⚡ 直连（独立于酒馆连接）', tag: '独立配置' },
                 ...route.profiles.map(p => ({ value: p.id, label: p.name, tag: p.api })),
             ];
             if (settings.profileId && !rewriteEntries.some(e => e.value === settings.profileId)) {
@@ -462,6 +474,10 @@ export function createRewriteUI({ getSettings, getView, getReader, getRouting, o
             if (document.activeElement !== model) model.value = settings.model;
             model.placeholder = route.model ? `默认：${route.model}` : '沿用默认型号，或输入模型名称';
             model.disabled = busy || !route.supported;
+            const directFields = root.querySelector('[data-direct-fields]');
+            directFields.hidden = settings.profileId !== DIRECT_ID;
+            if (document.activeElement !== directUrlInput) directUrlInput.value = settings.directUrl ?? '';
+            if (document.activeElement !== directKeyInput) directKeyInput.value = settings.directKey ?? '';
             const rewritePicker = root.querySelector('[data-model-picker]');
             const rewriteLoading = requests.has(`${seq}:rewrite`);
             const rewriteModelItems = route.models.length || route.canFetch
